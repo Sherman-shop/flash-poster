@@ -4,7 +4,7 @@
 
 适合咖啡店、奶茶店、花店和个体商家。输入文字，挑模板，下载高清 PNG。
 
-**在线体验：** 部署后填写 https://你的用户名.github.io/flash-poster/
+**🌐 在线体验：** <https://Sherman-shop.github.io/flash-poster/>
 
 ## 使用方式
 
