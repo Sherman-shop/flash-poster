@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ff563f">
+<title>一键促销海报生成器 · FlashPoster</title>
+<meta name="description" content="输入几行文字，立刻生成可直接发朋友圈、贴门店的促销海报，6 套设计模板 × 4 种尺寸，一键下载高清 PNG。">
+<link rel="stylesheet" href="assets/style.css"
+<link rel="stylesheet" href="assets/theme.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+<style>
+  .stage {
+    display: grid; place-items: center; padding: 22px;
+    background:
+      linear-gradient(45deg, rgba(255,255,255,.03) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.03) 75%),
+      linear-gradient(45deg, rgba(255,255,255,.03) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.03) 75%);
+    background-size: 22px 22px; background-position: 0 0, 11px 11px;
+    border: 1px solid var(--line); border-radius: var(--r-lg);
+  }
+  #cv {
+    max-width: 100%; max-height: 62vh; width: auto; height: auto;
+    border-radius: 10px; box-shadow: 0 24px 60px -24px rgba(0,0,0,.95);
+    display: block; background: #fff;
+  }
+  .tpl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tpl {
+    border-radius: 10px; padding: 9px 6px; cursor: pointer; text-align: center;
+    border: 1px solid var(--line); font-size: 11.5px; color: var(--text-dim);
+    transition: .16s; background: var(--surface); user-select: none;
+  }
+  .tpl:hover { color: var(--text); border-color: var(--line-strong); }
+  .tpl.on { border-color: rgba(124,92,255,.75); background: rgba(124,92,255,.16); color: #fff; font-weight: 600; }
+  .swatch { height: 22px; border-radius: 6px; margin-bottom: 6px; }
+  .size-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+</style>
+</head>
+<body>
+<div class="grid-overlay"></div>
+<header id="topbar"></header>
+
+<main class="wrap tool-page">
+  <div class="tool-hero fade-in">
+    <span class="eyebrow">TOOL 04 · VISUAL AUTOMATION</span>
+    <h1 style="margin-top:14px">一键<span class="gradient-text">促销海报</span>生成器</h1>
+    <p class="muted" style="max-width:760px">
+      不用打开 PS，也不用会设计。填几行字 → 右边实时出图 →
+      <b style="color:var(--text)">下载高清 PNG</b>，直接发朋友圈、发社群、打印贴门店。
+      6 套模板 × 4 种尺寸，全部在你自己的浏览器里渲染完成。
+    </p>
+  </div>
+
+  <div class="split">
+    <!-- ============ 左：输入 ============ -->
+    <div class="stack gap-16">
+      <div class="card fade-in">
+        <div class="section-title"><span class="step">1</span>海报文字</div>
+        <label class="field">
+          <span class="field-label">主标题（最吸睛的一句）</span>
+          <input type="text" id="f-title" maxlength="18" value="全场第二件 1 元">
+        </label>
+        <label class="field">
+          <span class="field-label">副标题 / 说明</span>
+          <input type="text" id="f-sub" maxlength="30" value="冬季新品羊绒围巾 · 五色可选">
+        </label>
+        <div class="row gap-12">
+          <label class="field" style="flex:1.1">
+            <span class="field-label">主数字（价格 / 折扣）</span>
+            <input type="text" id="f-price" maxlength="8" value="79">
+          </label>
+          <label class="field" style="flex:.9">
+            <span class="field-label">单位 / 后缀</span>
+            <input type="text" id="f-unit" maxlength="8" value="元起">
+          </label>
+        </div>
+        <label class="field">
+          <span class="field-label">左上角角标</span>
+          <input type="text" id="f-tag" maxlength="10" value="限时 3 天">
+        </label>
+        <label class="field">
+          <span class="field-label">行动号召</span>
+          <input type="text" id="f-cta" maxlength="16" value="扫码进群领券">
+        </label>
+        <div class="row gap-12">
+          <label class="field" style="flex:1;margin-bottom:0">
+            <span class="field-label">店名 / 品牌</span>
+            <input type="text" id="f-brand" maxlength="14" value="轻生活好物">
+          </label>
+          <label class="field" style="flex:1;margin-bottom:0">
+            <span class="field-label">底部备注</span>
+            <input type="text" id="f-note" maxlength="22" value="活动截止 10 月 31 日">
+          </label>
+        </div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="section-title"><span class="step">2</span>设计模板</div>
+        <div class="tpl-grid" id="tpls"></div>
+        <div class="section-title" style="margin-top:18px"><span class="step">3</span>尺寸</div>
+        <div class="size-grid" id="sizes"></div>
+      </div>
+
+      <div class="stack gap-8">
+        <button class="btn btn-primary btn-lg btn-block" id="btn-dl">⬇ 下载高清海报 PNG</button>
+        <div class="row gap-8">
+          <button class="btn btn-sm btn-ghost" style="flex:1" id="btn-shuffle">🎲 换个灵感</button>
+          <button class="btn btn-sm btn-ghost" style="flex:1" id="btn-copy-img">📋 复制图片</button>
+        </div>
+        <div class="callout callout-info tiny">
+          <span class="ico">💡</span>
+          <span>输入标题、优惠力度和品牌名称，挑选喜欢的设计，再下载高清图片。所有内容仅保存在当前浏览器。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 右：画布 ============ -->
+    <div class="stack gap-12">
+      <div class="stage"><canvas id="cv" width="1080" height="1080"></canvas></div>
+      <div class="row-wrap gap-8">
+        <span class="tag" id="info-size">1080 × 1080</span>
+        <span class="tag" id="info-tpl">烈焰促销</span>
+        <span class="spacer"></span>
+        <span class="tiny faint">实时预览 · 下载为 2 倍图，印刷/朋友圈都够清晰</span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer center">AI 营销工具箱 · 促销海报生成器 ｜ 纯 Canvas 渲染，不上传任何文字与图片</footer>
+</main>
+
+<script src="assets/ai.js"></script>
+<script>
+const { $, $$, toast, renderTopbar } = UI;
+renderTopbar();
+
+/* ============================ 画布工具 ============================ */
+const FONT = '"PingFang SC","Microsoft YaHei","HarmonyOS Sans SC","Hiragino Sans GB",sans-serif';
+const f = (size, weight) => `${weight || 400} ${size}px ${FONT}`;
+
+function roundRect(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+/** 中文友好换行 */
+function wrap(c, text, maxW) {
+  const lines = [];
+  let cur = "";
+  for (const ch of String(text)) {
+    if (ch === "\n") { lines.push(cur); cur = ""; continue; }
+    if (c.measureText(cur + ch).width > maxW && cur) { lines.push(cur); cur = ch; }
+    else cur += ch;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/** 自动缩字号，保证在 maxW × maxLines 内放得下 */
+function fitLines(c, text, maxW, startSize, maxLines, weight) {
+  let s = startSize;
+  for (; s > 12; s -= 2) {
+    c.font = f(s, weight || 800);
+    const L = wrap(c, text, maxW);
+    if (L.length <= maxLines) return { size: s, lines: L };
+  }
+  c.font = f(s, weight || 800);
+  return { size: s, lines: wrap(c, text, maxW).slice(0, maxLines) };
+}
+
+function drawLines(c, lines, x, y, lh, align) {
+  c.textAlign = align || "left";
+  lines.forEach((l, i) => c.fillText(l, x, y + i * lh));
+}
+
+function grad(c, x0, y0, x1, y1, stops) {
+  const g = c.createLinearGradient(x0, y0, x1, y1);
+  stops.forEach((s) => g.addColorStop(s[0], s[1]));
+  return g;
+}
+
+function dots(c, x, y, w, h, color, step, r) {
+  c.fillStyle = color;
+  for (let i = x; i < x + w; i += step)
+    for (let j = y; j < y + h; j += step) { c.beginPath(); c.arc(i, j, r, 0, 7); c.fill(); }
+}
+
+/* ============================ 模板 ============================ */
+const TEMPLATES = [
+  /* ---------- 1. 烈焰促销 ---------- */
+  { key: "fire", name: "烈焰促销", chip: "linear-gradient(135deg,#ff3d2e,#ff9a2e)",
+    draw(c, W, H, d) {
+      const S = W / 1080;
+      c.fillStyle = grad(c, 0, 0, W, H, [[0, "#ff2d20"], [.55, "#ff5b21"], [1, "#ffa520"]]);
+      c.fillRect(0, 0, W, H);
+      // 放射光
+      c.save(); c.globalAlpha = .12; c.fillStyle = "#fff";
+      for (let i = 0; i < 18; i++) {
+        c.beginPath(); c.moveTo(W / 2, H * .42);
+        const a = (i / 18) * Math.PI * 2;
+        c.arc(W / 2, H * .42, W, a, a + 0.09); c.closePath(); c.fill();
+      }
+      c.restore();
+      dots(c, 0, 0, W, H, "rgba(255,255,255,.08)", 46 * S, 2.6 * S);
+
+      const pad = 78 * S;
+      // 角标
+      if (d.tag) {
+        c.font = f(34 * S, 800); const tw = c.measureText(d.tag).width;
+        c.fillStyle = "#fff"; roundRect(c, pad, pad, tw + 44 * S, 68 * S, 34 * S); c.fill();
+        c.fillStyle = "#ff3324"; c.textBaseline = "middle"; c.textAlign = "center";
+        c.fillText(d.tag, pad + (tw + 44 * S) / 2, pad + 35 * S);
+      }
+      c.textBaseline = "alphabetic";
+      // 主标题
+      const t = fitLines(c, d.title, W - pad * 2, 118 * S, 2);
+      c.fillStyle = "#fff";
+      c.shadowColor = "rgba(120,0,0,.42)"; c.shadowBlur = 20 * S; c.shadowOffsetY = 6 * S;
+      c.font = f(t.size, 900);
+      drawLines(c, t.lines, pad, H * .30, t.size * 1.16, "left");
+      c.shadowBlur = 0; c.shadowOffsetY = 0;
+      // 副标题
+      c.font = f(36 * S, 500); c.fillStyle = "rgba(255,255,255,.93)";
+      drawLines(c, wrap(c, d.sub, W - pad * 2).slice(0, 2), pad, H * .30 + t.lines.length * t.size * 1.16 + 22 * S, 50 * S, "left");
+      // 价格票券
+      if (d.price) {
+        const bh = 200 * S, by = H * .58;
+        c.fillStyle = "#fff8ec";
+        roundRect(c, pad, by, W - pad * 2, bh, 26 * S); c.fill();
+        // 锯齿
+        c.fillStyle = grad(c, 0, 0, W, H, [[0, "#ff2d20"], [1, "#ffa520"]]);
+        for (let y = by + 20 * S; y < by + bh - 10 * S; y += 34 * S) {
+          c.beginPath(); c.arc(pad, y, 9 * S, 0, 7); c.fill();
+          c.beginPath(); c.arc(W - pad, y, 9 * S, 0, 7); c.fill();
+        }
+        c.textBaseline = "alphabetic";
+        c.fillStyle = "#ff2d20"; c.font = f(46 * S, 700); c.textAlign = "left";
+        c.fillText("¥", pad + 50 * S, by + 140 * S);
+        c.font = f(138 * S, 900);
+        const pw = c.measureText(d.price).width;
+        c.fillText(d.price, pad + 100 * S, by + 148 * S);
+        c.font = f(40 * S, 700); c.fillStyle = "#c92a12";
+        c.fillText(d.unit || "", pad + 112 * S + pw, by + 142 * S);
+        if (d.cta) {
+          c.font = f(34 * S, 700); const cw = c.measureText(d.cta).width;
+          c.fillStyle = "#ff2d20";
+          roundRect(c, W - pad - cw - 56 * S, by + bh / 2 - 36 * S, cw + 56 * S, 72 * S, 36 * S); c.fill();
+          c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
+          c.fillText(d.cta, W - pad - (cw + 56 * S) / 2, by + bh / 2);
+          c.textBaseline = "alphabetic";
+        }
+      }
+      // 底部
+      c.textAlign = "left"; c.fillStyle = "rgba(255,255,255,.95)"; c.font = f(34 * S, 700);
+      c.fillText(d.brand, pad, H - pad + 6 * S);
+      c.textAlign = "right"; c.fillStyle = "rgba(255,255,255,.72)"; c.font = f(26 * S, 400);
+      c.fillText(d.note, W - pad, H - pad + 4 * S);
+    } },
+
+  /* ---------- 2. 清新文艺 ---------- */
+  { key: "fresh", name: "清新文艺", chip: "linear-gradient(135deg,#f6f1e7,#bcd9c8)",
+    draw(c, W, H, d) {
+      const S = W / 1080, pad = 92 * S;
+      c.fillStyle = "#f7f3ea"; c.fillRect(0, 0, W, H);
+      c.fillStyle = grad(c, 0, H, W, 0, [[0, "rgba(140,183,159,.55)"], [1, "rgba(140,183,159,0)"]]);
+      c.fillRect(0, 0, W, H);
+      // 细框
+      c.strokeStyle = "rgba(60,90,70,.35)"; c.lineWidth = 2 * S;
+      c.strokeRect(pad * .62, pad * .62, W - pad * 1.24, H - pad * 1.24);
+      // 圆形色块
+      c.fillStyle = "rgba(188,217,200,.5)";
+      c.beginPath(); c.arc(W * .82, H * .2, W * .16, 0, 7); c.fill();
+
+      c.fillStyle = "#2f4a3a"; c.textBaseline = "alphabetic";
+      if (d.tag) {
+        c.font = f(26 * S, 600); c.textAlign = "left";
+        c.fillStyle = "#6d8f7b"; c.fillText("—  " + d.tag, pad, pad + 20 * S);
+      }
+      const t = fitLines(c, d.title, W - pad * 2.2, 100 * S, 2, 700);
+      c.fillStyle = "#24382c"; c.font = f(t.size, 700);
+      drawLines(c, t.lines, pad, H * .36, t.size * 1.26, "left");
+
+      c.strokeStyle = "#8cb79f"; c.lineWidth = 5 * S;
+      c.beginPath(); c.moveTo(pad, H * .40); c.lineTo(pad + 90 * S, H * .40); c.stroke();
+
+      c.font = f(32 * S, 400); c.fillStyle = "#4f6b58";
+      drawLines(c, wrap(c, d.sub, W - pad * 2.2).slice(0, 3), pad, H * .47, 52 * S, "left");
+
+      if (d.price) {
+        c.textAlign = "left"; c.fillStyle = "#2f4a3a";
+        c.font = f(32 * S, 500); c.fillText("¥", pad, H * .70);
+        c.font = f(110 * S, 300);
+        const pw = c.measureText(d.price).width;
+        c.fillText(d.price, pad + 40 * S, H * .70);
+        c.font = f(30 * S, 400); c.fillStyle = "#6d8f7b";
+        c.fillText(d.unit || "", pad + 54 * S + pw, H * .70);
+      }
+      if (d.cta) {
+        c.font = f(30 * S, 600); const cw = c.measureText(d.cta).width;
+        c.strokeStyle = "#2f4a3a"; c.lineWidth = 2.4 * S;
+        roundRect(c, pad, H * .75, cw + 56 * S, 72 * S, 36 * S); c.stroke();
+        c.fillStyle = "#2f4a3a"; c.textAlign = "center"; c.textBaseline = "middle";
+        c.fillText(d.cta, pad + (cw + 56 * S) / 2, H * .75 + 36 * S);
+        c.textBaseline = "alphabetic";
+      }
+      c.textAlign = "left"; c.font = f(28 * S, 600); c.fillStyle = "#2f4a3a";
+      c.fillText(d.brand, pad, H - pad);
+      c.textAlign = "right"; c.font = f(23 * S, 400); c.fillStyle = "#7d9187";
+      c.fillText(d.note, W - pad, H - pad);
+    } },
+
+  /* ---------- 3. 高级黑金 ---------- */
+  { key: "lux", name: "高级黑金", chip: "linear-gradient(135deg,#121212,#d4af37)",
+    draw(c, W, H, d) {
+      const S = W / 1080, pad = 88 * S;
+      c.fillStyle = "#0d0d0f"; c.fillRect(0, 0, W, H);
+      c.fillStyle = grad(c, 0, 0, W, H, [[0, "rgba(212,175,55,.16)"], [.5, "rgba(212,175,55,0)"], [1, "rgba(212,175,55,.1)"]]);
+      c.fillRect(0, 0, W, H);
+      const gold = grad(c, 0, H * .3, W, H * .5, [[0, "#f7e7a8"], [.4, "#d4af37"], [.7, "#fff3c4"], [1, "#b8912c"]]);
+      c.strokeStyle = "rgba(212,175,55,.5)"; c.lineWidth = 1.6 * S;
+      c.strokeRect(pad * .6, pad * .6, W - pad * 1.2, H - pad * 1.2);
+      // 角饰
+      c.lineWidth = 4 * S; c.strokeStyle = gold;
+      [[pad * .6, pad * .6, 1, 1], [W - pad * .6, pad * .6, -1, 1], [pad * .6, H - pad * .6, 1, -1], [W - pad * .6, H - pad * .6, -1, -1]]
+        .forEach(([x, y, sx, sy]) => {
+          c.beginPath(); c.moveTo(x + 52 * S * sx, y); c.lineTo(x, y); c.lineTo(x, y + 52 * S * sy); c.stroke();
+        });
+
+      c.textBaseline = "alphabetic"; c.textAlign = "center";
+      if (d.tag) { c.font = f(25 * S, 500); c.fillStyle = "rgba(212,175,55,.9)"; c.fillText("· " + d.tag + " ·", W / 2, H * .22); }
+      const t = fitLines(c, d.title, W - pad * 2.4, 104 * S, 2, 700);
+      c.font = f(t.size, 700); c.fillStyle = gold;
+      drawLines(c, t.lines, W / 2, H * .34, t.size * 1.2, "center");
+      c.font = f(30 * S, 300); c.fillStyle = "rgba(255,255,255,.62)";
+      drawLines(c, wrap(c, d.sub, W - pad * 2.4).slice(0, 2), W / 2, H * .34 + t.lines.length * t.size * 1.2 + 26 * S, 48 * S, "center");
+
+      c.strokeStyle = "rgba(212,175,55,.45)"; c.lineWidth = 1.4 * S;
+      c.beginPath(); c.moveTo(W * .32, H * .57); c.lineTo(W * .68, H * .57); c.stroke();
+      c.fillStyle = gold; c.beginPath(); c.arc(W / 2, H * .57, 5 * S, 0, 7); c.fill();
+
+      if (d.price) {
+        c.fillStyle = gold; c.font = f(126 * S, 300); c.textAlign = "center";
+        c.fillText(d.price, W / 2, H * .72);
+        c.font = f(28 * S, 400); c.fillStyle = "rgba(255,255,255,.6)";
+        c.fillText(d.unit || "", W / 2, H * .72 + 42 * S);
+      }
+      if (d.cta) {
+        c.font = f(28 * S, 600); const cw = c.measureText(d.cta).width;
+        c.strokeStyle = gold; c.lineWidth = 1.8 * S;
+        roundRect(c, W / 2 - (cw + 68 * S) / 2, H * .79, cw + 68 * S, 68 * S, 2); c.stroke();
+        c.fillStyle = gold; c.textBaseline = "middle";
+        c.fillText(d.cta, W / 2, H * .79 + 34 * S); c.textBaseline = "alphabetic";
+      }
+      c.font = f(26 * S, 500); c.fillStyle = "rgba(212,175,55,.85)";
+      c.fillText(d.brand, W / 2, H - pad + 4 * S);
+      c.font = f(20 * S, 300); c.fillStyle = "rgba(255,255,255,.35)";
+      c.fillText(d.note, W / 2, H - pad + 38 * S);
+    } },
+
+  /* ---------- 4. 赛博渐变 ---------- */
+  { key: "cyber", name: "赛博渐变", chip: "linear-gradient(135deg,#7c5cff,#22d3ee)",
+    draw(c, W, H, d) {
+      const S = W / 1080, pad = 82 * S;
+      c.fillStyle = "#07060f"; c.fillRect(0, 0, W, H);
+      [[W * .2, H * .22, W * .55, "rgba(124,92,255,.85)"],
+       [W * .85, H * .42, W * .45, "rgba(34,211,238,.6)"],
+       [W * .5, H * .92, W * .5, "rgba(244,114,182,.55)"]].forEach(([x, y, r, col]) => {
+        const g = c.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = g; c.fillRect(0, 0, W, H);
+      });
+      // 网格
+      c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1;
+      for (let i = 0; i < W; i += 54 * S) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, H); c.stroke(); }
+      for (let j = 0; j < H; j += 54 * S) { c.beginPath(); c.moveTo(0, j); c.lineTo(W, j); c.stroke(); }
+      // 玻璃卡
+      const cx = pad * .8, cy = H * .18, cw = W - pad * 1.6, ch = H * .66;
+      c.fillStyle = "rgba(255,255,255,.07)"; roundRect(c, cx, cy, cw, ch, 44 * S); c.fill();
+      c.strokeStyle = "rgba(255,255,255,.2)"; c.lineWidth = 1.6 * S;
+      roundRect(c, cx, cy, cw, ch, 44 * S); c.stroke();
+
+      c.textBaseline = "alphabetic"; c.textAlign = "left";
+      const ix = cx + 52 * S;
+      if (d.tag) {
+        c.font = f(26 * S, 700); const tw = c.measureText(d.tag).width;
+        c.fillStyle = grad(c, ix, 0, ix + tw + 40 * S, 0, [[0, "#7c5cff"], [1, "#22d3ee"]]);
+        roundRect(c, ix, cy + 46 * S, tw + 40 * S, 54 * S, 27 * S); c.fill();
+        c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
+        c.fillText(d.tag, ix + (tw + 40 * S) / 2, cy + 73 * S);
+        c.textAlign = "left"; c.textBaseline = "alphabetic";
+      }
+      const t = fitLines(c, d.title, cw - 104 * S, 108 * S, 2, 800);
+      c.font = f(t.size, 800); c.fillStyle = "#fff";
+      drawLines(c, t.lines, ix, cy + 206 * S, t.size * 1.14, "left");
+      c.font = f(30 * S, 400); c.fillStyle = "rgba(255,255,255,.66)";
+      drawLines(c, wrap(c, d.sub, cw - 104 * S).slice(0, 2), ix, cy + 206 * S + t.lines.length * t.size * 1.14 + 22 * S, 46 * S, "left");
+
+      if (d.price) {
+        const py = cy + ch - 150 * S;
+        c.font = f(130 * S, 800);
+        c.fillStyle = grad(c, ix, py - 100 * S, ix + 400 * S, py, [[0, "#a78bfa"], [.5, "#22d3ee"], [1, "#f472b6"]]);
+        c.fillText(d.price, ix, py);
+        const pw = c.measureText(d.price).width;
+        c.font = f(32 * S, 600); c.fillStyle = "rgba(255,255,255,.8)";
+        c.fillText(d.unit || "", ix + pw + 16 * S, py - 6 * S);
+      }
+      if (d.cta) {
+        c.font = f(30 * S, 700); const cw2 = c.measureText(d.cta).width;
+        const bx = cx + cw - cw2 - 108 * S, by = cy + ch - 118 * S;
+        c.fillStyle = grad(c, bx, by, bx + cw2 + 60 * S, by + 74 * S, [[0, "#7c5cff"], [1, "#22d3ee"]]);
+        roundRect(c, bx, by, cw2 + 60 * S, 74 * S, 37 * S); c.fill();
+        c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
+        c.fillText(d.cta, bx + (cw2 + 60 * S) / 2, by + 37 * S);
+        c.textAlign = "left"; c.textBaseline = "alphabetic";
+      }
+      c.font = f(30 * S, 700); c.fillStyle = "#fff";
+      c.fillText(d.brand, pad * .8, H - pad * .78);
+      c.textAlign = "right"; c.font = f(23 * S, 400); c.fillStyle = "rgba(255,255,255,.45)";
+      c.fillText(d.note, W - pad * .8, H - pad * .78);
+    } },
+
+  /* ---------- 5. 日系简约 ---------- */
+  { key: "jp", name: "日系简约", chip: "linear-gradient(135deg,#ffffff,#ff5a5f)",
+    draw(c, W, H, d) {
+      const S = W / 1080, pad = 100 * S;
+      c.fillStyle = "#fbfbf9"; c.fillRect(0, 0, W, H);
+      c.fillStyle = "#e8403f"; c.fillRect(0, 0, 18 * S, H);
+      c.fillStyle = "rgba(232,64,63,.07)";
+      c.beginPath(); c.arc(W * .88, H * .88, W * .3, 0, 7); c.fill();
+
+      c.textBaseline = "alphabetic"; c.textAlign = "left";
+      if (d.tag) {
+        c.font = f(24 * S, 500); c.fillStyle = "#e8403f";
+        c.fillText(d.tag, pad, pad);
+        const tw = c.measureText(d.tag).width;
+        c.strokeStyle = "#e8403f"; c.lineWidth = 1.2 * S;
+        c.beginPath(); c.moveTo(pad, pad + 14 * S); c.lineTo(pad + tw, pad + 14 * S); c.stroke();
+      }
+      const t = fitLines(c, d.title, W - pad * 2, 96 * S, 3, 700);
+      c.font = f(t.size, 700); c.fillStyle = "#1c1c1c";
+      drawLines(c, t.lines, pad, H * .30, t.size * 1.34, "left");
+      c.font = f(27 * S, 400); c.fillStyle = "#7a7a7a";
+      drawLines(c, wrap(c, d.sub, W - pad * 2).slice(0, 3), pad, H * .30 + t.lines.length * t.size * 1.34 + 24 * S, 46 * S, "left");
+
+      c.strokeStyle = "#dcdcd6"; c.lineWidth = 1.2 * S;
+      c.beginPath(); c.moveTo(pad, H * .66); c.lineTo(W - pad, H * .66); c.stroke();
+
+      if (d.price) {
+        c.fillStyle = "#e8403f"; c.font = f(118 * S, 700);
+        c.fillText(d.price, pad, H * .80);
+        const pw = c.measureText(d.price).width;
+        c.font = f(28 * S, 500); c.fillStyle = "#1c1c1c";
+        c.fillText(d.unit || "", pad + pw + 14 * S, H * .80);
+      }
+      if (d.cta) {
+        c.font = f(28 * S, 600); const cw = c.measureText(d.cta).width;
+        c.fillStyle = "#1c1c1c";
+        roundRect(c, W - pad - cw - 52 * S, H * .745, cw + 52 * S, 66 * S, 4 * S); c.fill();
+        c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
+        c.fillText(d.cta, W - pad - (cw + 52 * S) / 2, H * .745 + 33 * S);
+        c.textAlign = "left"; c.textBaseline = "alphabetic";
+      }
+      c.font = f(26 * S, 600); c.fillStyle = "#1c1c1c";
+      c.fillText(d.brand, pad, H - pad * .62);
+      c.textAlign = "right"; c.font = f(21 * S, 400); c.fillStyle = "#9a9a9a";
+      c.fillText(d.note, W - pad, H - pad * .62);
+    } },
+
+  /* ---------- 6. 节日喜庆 ---------- */
+  { key: "festive", name: "节日喜庆", chip: "linear-gradient(135deg,#c8102e,#ffd700)",
+    draw(c, W, H, d) {
+      const S = W / 1080, pad = 84 * S;
+      c.fillStyle = grad(c, 0, 0, 0, H, [[0, "#b00c21"], [.6, "#d31027"], [1, "#8c0718"]]);
+      c.fillRect(0, 0, W, H);
+      // 祥云点阵
+      c.save(); c.globalAlpha = .1; c.strokeStyle = "#ffd700"; c.lineWidth = 3 * S;
+      for (let i = 0; i < 26; i++) {
+        const x = (i * 211 % W), y = ((i * 367) % H);
+        c.beginPath(); c.arc(x, y, 26 * S, Math.PI * .15, Math.PI * 1.1); c.stroke();
+      }
+      c.restore();
+      // 灯笼
+      [[W * .14, H * .1], [W * .86, H * .07]].forEach(([x, y]) => {
+        c.strokeStyle = "rgba(255,215,0,.5)"; c.lineWidth = 2.4 * S;
+        c.beginPath(); c.moveTo(x, 0); c.lineTo(x, y); c.stroke();
+        c.fillStyle = "rgba(255,196,0,.92)";
+        c.beginPath(); c.ellipse(x, y + 40 * S, 36 * S, 44 * S, 0, 0, 7); c.fill();
+        c.strokeStyle = "rgba(190,20,20,.55)";
+        for (let k = -2; k <= 2; k++) {
+          c.beginPath(); c.ellipse(x, y + 40 * S, Math.abs(k) * 11 * S + 2, 44 * S, 0, 0, 7); c.stroke();
+        }
+      });
+      const gold = grad(c, 0, H * .3, W, H * .5, [[0, "#ffeaa0"], [.45, "#ffd700"], [1, "#e0a800"]]);
+      c.strokeStyle = "rgba(255,215,0,.6)"; c.lineWidth = 2.2 * S;
+      roundRect(c, pad * .66, pad * .9, W - pad * 1.32, H - pad * 1.7, 24 * S); c.stroke();
+
+      c.textAlign = "center"; c.textBaseline = "alphabetic";
+      if (d.tag) {
+        c.font = f(30 * S, 700); const tw = c.measureText(d.tag).width;
+        c.fillStyle = gold; roundRect(c, W / 2 - (tw + 48 * S) / 2, H * .22, tw + 48 * S, 60 * S, 30 * S); c.fill();
+        c.fillStyle = "#a80d1e"; c.textBaseline = "middle";
+        c.fillText(d.tag, W / 2, H * .22 + 30 * S); c.textBaseline = "alphabetic";
+      }
+      const t = fitLines(c, d.title, W - pad * 2.3, 116 * S, 2, 900);
+      c.font = f(t.size, 900); c.fillStyle = gold;
+      c.shadowColor = "rgba(90,0,0,.5)"; c.shadowBlur = 16 * S; c.shadowOffsetY = 5 * S;
+      drawLines(c, t.lines, W / 2, H * .40, t.size * 1.18, "center");
+      c.shadowBlur = 0; c.shadowOffsetY = 0;
+      c.font = f(31 * S, 400); c.fillStyle = "rgba(255,245,220,.9)";
+      drawLines(c, wrap(c, d.sub, W - pad * 2.3).slice(0, 2), W / 2, H * .40 + t.lines.length * t.size * 1.18 + 24 * S, 48 * S, "center");
+
+      if (d.price) {
+        const by = H * .63;
+        c.fillStyle = "rgba(255,238,200,.97)";
+        roundRect(c, W * .18, by, W * .64, 170 * S, 20 * S); c.fill();
+        c.fillStyle = "#c01228"; c.font = f(40 * S, 700); c.textAlign = "center";
+        c.font = f(126 * S, 900);
+        const pw = c.measureText(d.price).width;
+        c.fillText(d.price, W / 2 - 24 * S, by + 126 * S);
+        c.font = f(34 * S, 700);
+        c.textAlign = "left";
+        c.fillText(d.unit || "", W / 2 + pw / 2 - 16 * S, by + 120 * S);
+      }
+      c.textAlign = "center";
+      if (d.cta) {
+        c.font = f(32 * S, 700); const cw = c.measureText(d.cta).width;
+        c.fillStyle = gold; roundRect(c, W / 2 - (cw + 64 * S) / 2, H * .815, cw + 64 * S, 70 * S, 35 * S); c.fill();
+        c.fillStyle = "#a80d1e"; c.textBaseline = "middle";
+        c.fillText(d.cta, W / 2, H * .815 + 35 * S); c.textBaseline = "alphabetic";
+      }
+      c.font = f(28 * S, 700); c.fillStyle = gold;
+      c.fillText(d.brand, W / 2, H - pad * .72);
+      c.font = f(21 * S, 400); c.fillStyle = "rgba(255,230,200,.6)";
+      c.fillText(d.note, W / 2, H - pad * .72 + 34 * S);
+    } },
+];
+
+const SIZES = [
+  { key: "sq",   name: "朋友圈 1:1",   w: 1080, h: 1080 },
+  { key: "xhs",  name: "小红书 3:4",   w: 1080, h: 1440 },
+  { key: "story",name: "手机full 9:16", w: 1080, h: 1920 },
+  { key: "cover",name: "公众号封面",    w: 1080, h: 460 },
+];
+
+/* ============================ 渲染 ============================ */
+let TPL = 0, SIZE = 0;
+const cv = $("#cv"), ctx = cv.getContext("2d");
+
+function data() {
+  return {
+    title: $("#f-title").value || " ",
+    sub: $("#f-sub").value,
+    price: $("#f-price").value,
+    unit: $("#f-unit").value,
+    tag: $("#f-tag").value,
+    cta: $("#f-cta").value,
+    brand: $("#f-brand").value,
+    note: $("#f-note").value,
+  };
+}
+
+function render() {
+  const s = SIZES[SIZE];
+  cv.width = s.w; cv.height = s.h;
+  ctx.clearRect(0, 0, s.w, s.h);
+  try { TEMPLATES[TPL].draw(ctx, s.w, s.h, data()); }
+  catch (e) { console.error(e); }
+  $("#info-size").textContent = `${s.w} × ${s.h}`;
+  $("#info-tpl").textContent = TEMPLATES[TPL].name;
+  // 适配预览高度
+  cv.style.maxHeight = s.h > s.w * 1.4 ? "66vh" : "58vh";
+}
+
+/* ============================ 交互 ============================ */
+$("#tpls").innerHTML = TEMPLATES.map((t, i) =>
+  `<div class="tpl ${i === 0 ? "on" : ""}" data-i="${i}"><div class="swatch" style="background:${t.chip}"></div>${t.name}</div>`).join("");
+$$("#tpls .tpl").forEach((el) => el.addEventListener("click", () => {
+  TPL = +el.dataset.i;
+  $$("#tpls .tpl").forEach((x) => x.classList.toggle("on", x === el));
+  render();
+}));
+
+$("#sizes").innerHTML = SIZES.map((s, i) =>
+  `<div class="tpl ${i === 0 ? "on" : ""}" data-i="${i}">${s.name}<div class="tiny faint">${s.w}×${s.h}</div></div>`).join("");
+$$("#sizes .tpl").forEach((el) => el.addEventListener("click", () => {
+  SIZE = +el.dataset.i;
+  $$("#sizes .tpl").forEach((x) => x.classList.toggle("on", x === el));
+  render();
+}));
+
+["f-title","f-sub","f-price","f-unit","f-tag","f-cta","f-brand","f-note"]
+  .forEach((id) => $("#" + id).addEventListener("input", render));
+
+$("#btn-dl").addEventListener("click", () => {
+  const s = SIZES[SIZE];
+  // 2 倍图
+  const big = document.createElement("canvas");
+  big.width = s.w * 2; big.height = s.h * 2;
+  const bc = big.getContext("2d");
+  bc.scale(2, 2);
+  try { TEMPLATES[TPL].draw(bc, s.w, s.h, data()); } catch (e) {}
+  big.toBlob((blob) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `海报-${TEMPLATES[TPL].name}-${s.key}-${UI.todayISO()}.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast("海报已下载（2 倍高清图）", "ok");
+  }, "image/png");
+});
+
+$("#btn-copy-img").addEventListener("click", () => {
+  cv.toBlob(async (blob) => {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      toast("图片已复制，可直接粘贴到微信", "ok");
+    } catch (e) { toast("当前浏览器不支持复制图片，请用下载按钮", "bad"); }
+  });
+});
+
+const IDEAS = [
+  { title:"全场第二件 1 元", sub:"冬季新品羊绒围巾 · 五色可选", price:"79", unit:"元起", tag:"限时 3 天", cta:"扫码进群领券", brand:"轻生活好物", note:"活动截止 10 月 31 日" },
+  { title:"新店开业 全场五折", sub:"手工现烤 · 每日 8 点出炉", price:"5", unit:"折", tag:"开业大吉", cta:"到店出示本图", brand:"一口酥烘焙坊", note:"开业前三天 每日限量 200 份" },
+  { title:"第二杯半价", sub:"厚乳拿铁 / 生椰拿铁 / 桂花乌龙", price:"9.9", unit:"元", tag:"下午茶时段", cta:"小程序下单", brand:"角落咖啡", note:"每日 14:00–17:00" },
+  { title:"老客回归礼", sub:"三个月没见啦，这杯算我请你", price:"20", unit:"元券", tag:"专属福利", cta:"回复「回来了」领取", brand:"小满生活馆", note:"券 7 天内有效 不可叠加" },
+  { title:"冬至吃饺子", sub:"手工现包 · 三鲜 / 玉米 / 虾仁", price:"29", unit:"元/份", tag:"冬至限定", cta:"微信预订自提", brand:"姥姥家饺子", note:"12 月 22 日当天供应" },
+  { title:"年度会员 立省 600", sub:"全年免配送费 + 每月专属券包", price:"199", unit:"元/年", tag:"仅限 100 名", cta:"立即开通", brand:"每日鲜生", note:"活动名额售完即止" },
+];
+$("#btn-shuffle").addEventListener("click", () => {
+  const d = IDEAS[Math.floor(Math.random() * IDEAS.length)];
+  Object.keys(d).forEach((k) => { const el = $("#f-" + k); if (el) el.value = d[k]; });
+  TPL = Math.floor(Math.random() * TEMPLATES.length);
+  $$("#tpls .tpl").forEach((x, i) => x.classList.toggle("on", i === TPL));
+  render();
+});
+
+/* 支持从节日点子库带参数跳转 */
+(function prefill() {
+  const q = new URLSearchParams(location.search);
+  const map = { title: "f-title", sub: "f-sub", price: "f-price", unit: "f-unit", tag: "f-tag", cta: "f-cta", brand: "f-brand", note: "f-note" };
+  let hit = false;
+  Object.keys(map).forEach((k) => { if (q.has(k)) { $("#" + map[k]).value = q.get(k); hit = true; } });
+  const tk = q.get("tpl");
+  if (tk) { const i = TEMPLATES.findIndex((t) => t.key === tk); if (i >= 0) { TPL = i; $$("#tpls .tpl").forEach((x, j) => x.classList.toggle("on", j === i)); } }
+  if (hit) toast("已从节日点子库带入文案 ✨", "ok");
+})();
+
+render();
+</script>
+</body>
+</html>
